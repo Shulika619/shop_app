@@ -23,7 +23,8 @@ class ProductUserItem extends StatelessWidget {
         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
           IconButton(
               onPressed: () {
-                Navigator.pushNamed(context, EditProductScreen.routeName);
+                Navigator.pushNamed(context, EditProductScreen.routeName,
+                    arguments: id);
               },
               icon: const Icon(Icons.edit)),
           IconButton(
