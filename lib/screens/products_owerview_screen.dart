@@ -20,7 +20,7 @@ class ProductsOwerviewScreen extends StatefulWidget {
 }
 
 class _ProductsOwerviewScreenState extends State<ProductsOwerviewScreen> {
-  var _showOnlyFavorites = false;
+  var showOnlyFavorites = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,9 +31,9 @@ class _ProductsOwerviewScreenState extends State<ProductsOwerviewScreen> {
               onSelected: (FilterOptions selectedValue) {
                 setState(() {
                   if (selectedValue == FilterOptions.favorite) {
-                    _showOnlyFavorites = true;
+                    showOnlyFavorites = true;
                   } else {
-                    _showOnlyFavorites = false;
+                    showOnlyFavorites = false;
                   }
                 });
               },
@@ -60,7 +60,7 @@ class _ProductsOwerviewScreenState extends State<ProductsOwerviewScreen> {
         ],
       ),
       drawer: const AppDrauwer(),
-      body: ProductsGrid(showFavorites: _showOnlyFavorites),
+      body: ProductsGrid(showFavorites: showOnlyFavorites),
     );
   }
 }
