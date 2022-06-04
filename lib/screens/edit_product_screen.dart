@@ -14,24 +14,25 @@ class EditProductScreen extends StatefulWidget {
 }
 
 class _EditProductScreenState extends State<EditProductScreen> {
-  var _id = '';
-  var _title = '';
-  var _descriprion = '';
-  var _price = 0.0;
-  var _imageUrl = '';
   late Product _product;
+  String? _id;
+  String? _title;
+  String? _descriprion;
+  double? _price;
+  String? _imageUrl;
+  bool? _isFavorite;
 
   final _form = GlobalKey<FormState>();
   final _priceFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
   final _imageUrlFocusNode = FocusNode();
-  final _imageUrlController = TextEditingController();
+  // final _imageUrlController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _imageUrlFocusNode.addListener(_updateImageUrl);
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _imageUrlFocusNode.addListener(_updateImageUrl);
+  // }
 
   @override
   void dispose() {
@@ -39,40 +40,48 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _priceFocusNode.dispose();
     _descriptionFocusNode.dispose();
     // _imageUrlFocusNode.dispose();
-    _imageUrlFocusNode.removeListener(_updateImageUrl);
-    _imageUrlController.dispose();
+    // _imageUrlFocusNode.removeListener(_updateImageUrl);
+    // _imageUrlController.dispose();
   }
 
-  void _updateImageUrl() {
-    if (!_priceFocusNode.hasFocus) {
-      if ((!_imageUrlController.text.startsWith('http') &&
-              !_imageUrlController.text.startsWith('https')) ||
-          (!_imageUrlController.text.endsWith('.png') &&
-              !_imageUrlController.text.endsWith('.jpg') &&
-              !_imageUrlController.text.endsWith('.jpeg'))) {
-        return;
-      }
-      setState(() {});
-    }
-  }
+  // void _updateImageUrl() {
+  //   if (!_priceFocusNode.hasFocus) {
+  //     if ((!_imageUrlController.text.startsWith('http') &&
+  //             !_imageUrlController.text.startsWith('https')) ||
+  //         (!_imageUrlController.text.endsWith('.png') &&
+  //             !_imageUrlController.text.endsWith('.jpg') &&
+  //             !_imageUrlController.text.endsWith('.jpeg'))) {
+  //       return;
+  //     }
+  //     setState(() {});
+  //   }
+  // }
 
   void _saveForm() {
     if (_form.currentState!.validate()) {
       _form.currentState?.save();
-      _product = Product(
-          id: DateTime.now().toString(),
-          title: _title,
-          description: _descriprion,
-          price: _price,
-          imageUrl: _imageUrl);
-      context.read<ProductsProvider>().addProduct(_product);
-      Navigator.pop(context);
 
-      print(_product.id);
-      print(_product.title);
-      print(_product.description);
-      print(_product.price);
-      print(_product.imageUrl);
+      if (_id == null) {
+        _product = Product(
+            id: DateTime.now().toString(),
+            title: _title as String,
+            description: _descriprion as String,
+            price: _price as double,
+            imageUrl: _imageUrl as String,
+            isFavorite: false);
+        context.read<ProductsProvider>().addProduct(_product);
+        Navigator.pop(context);
+      } else {
+        _product = Product(
+            id: _id as String,
+            title: _title as String,
+            description: _descriprion as String,
+            price: _price as double,
+            imageUrl: _imageUrl as String,
+            isFavorite: _isFavorite as bool);
+        context.read<ProductsProvider>().updateProduct(_product);
+        Navigator.pop(context);
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -88,6 +97,18 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var routeArg = ModalRoute.of(context)!.settings.arguments;
+    if (routeArg != null) {
+      final product =
+          context.read<ProductsProvider>().findById(routeArg as String);
+      _id = product.id;
+      _title = product.title;
+      _descriprion = product.description;
+      _price = product.price;
+      _imageUrl = product.imageUrl;
+      _isFavorite = product.isFavorite;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit product'),
@@ -124,7 +145,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     },
                   ),
                   TextFormField(
-                    initialValue: _price.toString(),
+                    initialValue: _price == null ? '' : _price.toString(),
                     decoration: const InputDecoration(labelText: 'Price'),
                     keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.next,
@@ -162,7 +183,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         return 'Please enter a desctiption';
                       }
                       if (value.length < 12) {
-                        return 'Should be at least 10 characters long';
+                        return 'Should be at least 12 characters long';
                       }
                       return null;
                     },
@@ -175,12 +196,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     children: [
                       Expanded(
                         child: TextFormField(
-                          // initialValue: _imageUrl,
+                          initialValue: _imageUrl,
                           decoration:
                               const InputDecoration(labelText: "Image URL"),
                           keyboardType: TextInputType.url,
                           textInputAction: TextInputAction.done,
-                          controller: _imageUrlController,
+                          // controller: _imageUrlController,
                           focusNode: _imageUrlFocusNode,
                           onEditingComplete: () {
                             setState(() {});
@@ -214,11 +235,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         margin: const EdgeInsets.only(top: 10, left: 15),
                         decoration: BoxDecoration(
                             border: Border.all(width: 1, color: Colors.grey)),
-                        child: _imageUrlController.text == ''
+                        child: _imageUrl == null
                             ? const Text("Enter a URL")
                             : FittedBox(
                                 child: Image.network(
-                                  _imageUrlController.text,
+                                  _imageUrl as String,
                                   fit: BoxFit.cover,
                                 ),
                               ),

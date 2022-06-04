@@ -22,9 +22,10 @@ class ProductsGrid extends StatelessWidget {
           childAspectRatio: 3 / 2,
           crossAxisSpacing: 10,
           mainAxisSpacing: 10),
-      itemBuilder: (ctx, i) => ChangeNotifierProvider.value(
+      itemBuilder: (context, i) => ChangeNotifierProvider.value(
         value: products[i],
-        child: const ProductItemWidget(),
+        child:
+            ProductItemWidget(), //! Не ставить const, будут проблемы с фильтрами Only Favorite / Show ALL
       ),
     );
   }
