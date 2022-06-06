@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/cart.dart';
+import '../providers/products_provider.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/badge.dart';
 import '../widgets/products_grid.dart';
@@ -20,7 +21,22 @@ class ProductsOwerviewScreen extends StatefulWidget {
 }
 
 class _ProductsOwerviewScreenState extends State<ProductsOwerviewScreen> {
-  var showOnlyFavorites = false;
+  var isLoading = false;
+  var isShowOnlyFavorites = false;
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      isLoading = true;
+    });
+    context.read<ProductsProvider>().fetchAndSetProducts().then((_) {
+      setState(() {
+        isLoading = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,9 +47,9 @@ class _ProductsOwerviewScreenState extends State<ProductsOwerviewScreen> {
               onSelected: (FilterOptions selectedValue) {
                 setState(() {
                   if (selectedValue == FilterOptions.favorite) {
-                    showOnlyFavorites = true;
+                    isShowOnlyFavorites = true;
                   } else {
-                    showOnlyFavorites = false;
+                    isShowOnlyFavorites = false;
                   }
                 });
               },
@@ -60,7 +76,11 @@ class _ProductsOwerviewScreenState extends State<ProductsOwerviewScreen> {
         ],
       ),
       drawer: const AppDrauwer(),
-      body: ProductsGrid(showFavorites: showOnlyFavorites),
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : ProductsGrid(showFavorites: isShowOnlyFavorites),
     );
   }
 }
