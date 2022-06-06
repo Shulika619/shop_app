@@ -27,9 +27,8 @@ class _ProductsOwerviewScreenState extends State<ProductsOwerviewScreen> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      isLoading = true;
-    });
+
+    isLoading = true;
     context.read<ProductsProvider>().fetchAndSetProducts().then((_) {
       setState(() {
         isLoading = false;

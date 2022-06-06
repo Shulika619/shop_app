@@ -64,12 +64,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             onPressed: () => Navigator.pop(ctx),
                             child: const Text("Ok"))
                       ]));
-        } finally {
-          setState(() {
-            _isLoading = false;
-          });
-          Navigator.pop(context);
         }
+        // finally {
+        //   setState(() {
+        //     _isLoading = false;
+        //   });
+        //   Navigator.pop(context);
+        // }
       } else {
         _product = Product(
             id: _id as String,
@@ -78,12 +79,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
             price: _price as double,
             imageUrl: _imageUrl as String,
             isFavorite: _isFavorite as bool);
-        context.read<ProductsProvider>().updateProduct(_product);
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.pop(context);
+        await context.read<ProductsProvider>().updateProduct(_product);
       }
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

@@ -40,11 +40,22 @@ class ProductUserItem extends StatelessWidget {
                                 onPressed: () => Navigator.of(ctx).pop(),
                                 child: const Text('No')),
                             TextButton(
-                                onPressed: () {
-                                  context
-                                      .read<ProductsProvider>()
-                                      .removeProduct(id);
-                                  Navigator.of(ctx).pop();
+                                onPressed: () async {
+                                  try {
+                                    await context
+                                        .read<ProductsProvider>()
+                                        .removeProduct(id);
+                                    Navigator.of(ctx).pop();
+                                  } catch (error) {
+                                    Navigator.of(ctx).pop();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            backgroundColor: Colors.red,
+                                            content: Text(
+                                                'Error! timeOut delete product',
+                                                textAlign: TextAlign.center)));
+                                    rethrow;
+                                  }
                                 },
                                 child: const Text('Yes')),
                           ],

@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../models/http_exception.dart';
 import 'product.dart';
 
 const kUrl =
@@ -54,8 +56,7 @@ class ProductsProvider with ChangeNotifier {
   Future<void> fetchAndSetProducts() async {
     try {
       final response = await http.get(Uri.parse(kUrl));
-      // print(response.body.toString());
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && response.body.toString() != 'null') {
         final extractedData = jsonDecode(response.body) as Map<String, dynamic>;
         final List<Product> loadedProducts = [];
         extractedData.forEach((prodId, prodData) {
@@ -99,15 +100,44 @@ class ProductsProvider with ChangeNotifier {
     }
   }
 
-  void updateProduct(Product newProduct) {
-    final productIndex = _items.indexWhere((prod) => prod.id == newProduct.id);
-    _items[productIndex] = newProduct;
-    notifyListeners();
+  Future<void> updateProduct(Product newProduct) async {
+    final url =
+        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/pruducts/${newProduct.id}.json';
+    try {
+      await http.patch(Uri.parse(url),
+          body: jsonEncode({
+            'title': newProduct.title,
+            'description': newProduct.description,
+            'imageUrl': newProduct.imageUrl,
+            'price': newProduct.price,
+            // 'isFavorite': newProduct.isFavorite,
+          }));
+      final productIndex =
+          _items.indexWhere((prod) => prod.id == newProduct.id);
+      _items[productIndex] = newProduct;
+      notifyListeners();
+    } catch (error) {
+      rethrow;
+    }
   }
 
-  void removeProduct(String id) {
-    _items.removeWhere((prod) => prod.id == id);
-    notifyListeners();
+  Future<void> removeProduct(String id) async {
+    final url =
+        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/pruducts/$id.json';
+    try {
+      final response =
+          await http.delete(Uri.parse(url)).timeout(const Duration(seconds: 3));
+      if (response.statusCode == 200) {
+        _items.removeWhere((prod) => prod.id == id);
+        notifyListeners();
+      } else {
+        throw HttpException('Error response? Cant delete product!');
+      }
+    } on TimeoutException catch (_) {
+      rethrow;
+    } catch (error) {
+      rethrow;
+    }
   }
 
   Product findById(String id) {
