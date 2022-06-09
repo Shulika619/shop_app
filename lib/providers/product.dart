@@ -20,12 +20,11 @@ class Product with ChangeNotifier {
       required this.imageUrl,
       this.isFavorite = false});
 
-  Future<void> toggleFavoriteStatus() async {
-    final url =
-        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/pruducts/$id.json';
+  Future<void> toggleFavoriteStatus(String authToken, String userId) async {
+    final url = Uri.parse(
+        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/userFavorites/$userId/$id.json?auth=$authToken');
     try {
-      final response = await http.patch(Uri.parse(url),
-          body: jsonEncode({'isFavorite': !isFavorite}));
+      final response = await http.put(url, body: jsonEncode(!isFavorite));
       isFavorite = !isFavorite;
       notifyListeners();
     } catch (error) {

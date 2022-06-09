@@ -7,9 +7,6 @@ import 'package:http/http.dart' as http;
 import '../models/http_exception.dart';
 import 'product.dart';
 
-const kUrl =
-    'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/pruducts.json';
-
 class ProductsProvider with ChangeNotifier {
   List<Product> _items = [
     // Product(
@@ -45,6 +42,10 @@ class ProductsProvider with ChangeNotifier {
     // ),
   ];
 
+  final String? authToken;
+  final String? userId;
+  ProductsProvider(this.authToken, this.userId, this._items);
+
   List<Product> get items {
     return [..._items];
   }
@@ -53,21 +54,33 @@ class ProductsProvider with ChangeNotifier {
     return items.where((prod) => prod.isFavorite).toList();
   }
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    final filterStr =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
+    var url = Uri.parse(
+        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$authToken&$filterStr');
     try {
-      final response = await http.get(Uri.parse(kUrl));
+      final response = await http.get(url);
       if (response.statusCode == 200 && response.body.toString() != 'null') {
         final extractedData = jsonDecode(response.body) as Map<String, dynamic>;
+
+        url = Uri.parse(
+            'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/userFavorites/$userId.json?auth=$authToken');
+        final favoriteResponse = await http.get(url);
+        final favoriteData = jsonDecode(favoriteResponse.body);
         final List<Product> loadedProducts = [];
         extractedData.forEach((prodId, prodData) {
           loadedProducts.add(Product(
-              id: prodId,
-              title: prodData['title'],
-              description: prodData['description'],
-              price: prodData['price'],
-              imageUrl: prodData['imageUrl'],
-              isFavorite: prodData['isFavorite']));
+            id: prodId,
+            title: prodData['title'],
+            description: prodData['description'],
+            price: prodData['price'],
+            imageUrl: prodData['imageUrl'],
+            isFavorite:
+                favoriteData == null ? false : favoriteData[prodId] ?? false,
+          ));
         });
+
         _items = loadedProducts;
         notifyListeners();
       }
@@ -77,15 +90,16 @@ class ProductsProvider with ChangeNotifier {
   }
 
   Future<void> addProduct(Product newProduct) async {
+    final url = Uri.parse(
+        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$authToken');
     try {
-      final url = Uri.parse(kUrl);
       final response = await http.post(url,
           body: jsonEncode({
             'title': newProduct.title,
             'description': newProduct.description,
             'imageUrl': newProduct.imageUrl,
             'price': newProduct.price,
-            'isFavorite': newProduct.isFavorite,
+            'creatorId': userId,
           }));
       final product = Product(
           id: jsonDecode(response.body)['name'],
@@ -101,10 +115,11 @@ class ProductsProvider with ChangeNotifier {
   }
 
   Future<void> updateProduct(Product newProduct) async {
-    final url =
-        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/pruducts/${newProduct.id}.json';
+    final url = Uri.parse(
+        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/products/${newProduct.id}.json?auth=$authToken');
+
     try {
-      await http.patch(Uri.parse(url),
+      await http.patch(url,
           body: jsonEncode({
             'title': newProduct.title,
             'description': newProduct.description,
@@ -122,11 +137,12 @@ class ProductsProvider with ChangeNotifier {
   }
 
   Future<void> removeProduct(String id) async {
-    final url =
-        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/pruducts/$id.json';
+    final url = Uri.parse(
+        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json?auth=$authToken');
+
     try {
       final response =
-          await http.delete(Uri.parse(url)).timeout(const Duration(seconds: 3));
+          await http.delete(url).timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) {
         _items.removeWhere((prod) => prod.id == id);
         notifyListeners();

@@ -20,16 +20,21 @@ class OrderItem {
 
 class Orders with ChangeNotifier {
   List<OrderItem> _orders = [];
+  final String? authToken;
+  final String? userId;
+
   List<OrderItem> get orders {
     return [..._orders];
   }
 
-  Future<void> fetchAndSetOrders() async {
-    const url =
-        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/orders.json';
-    try {
-      final response = await http.get(Uri.parse(url));
+  Orders(this.authToken, this.userId, this._orders);
 
+  Future<void> fetchAndSetOrders() async {
+    final url = Uri.parse(
+        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/orders/$userId.json?auth=$authToken');
+
+    try {
+      final response = await http.get(url);
       if (response.statusCode == 200 && response.body.toString() != 'null') {
         List<OrderItem> loadedOrders = [];
         final extractedData = jsonDecode(response.body) as Map<String, dynamic>;
@@ -55,11 +60,12 @@ class Orders with ChangeNotifier {
   }
 
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
-    const url =
-        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/orders.json';
+    final url = Uri.parse(
+        'https://developer-shulika-test-default-rtdb.europe-west1.firebasedatabase.app/orders/$userId.json?auth=$authToken');
+
     final _dateTimeNow = DateTime.now();
     try {
-      final response = await http.post(Uri.parse(url),
+      final response = await http.post(url,
           body: jsonEncode({
             'amount': total,
             'datetime': _dateTimeNow.toIso8601String(),

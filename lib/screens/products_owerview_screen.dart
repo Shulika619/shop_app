@@ -16,6 +16,8 @@ enum FilterOptions {
 class ProductsOwerviewScreen extends StatefulWidget {
   const ProductsOwerviewScreen({Key? key}) : super(key: key);
 
+  static const routeName = '/products-owerview';
+
   @override
   State<ProductsOwerviewScreen> createState() => _ProductsOwerviewScreenState();
 }
